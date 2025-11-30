@@ -1,62 +1,207 @@
-[Project]
-FileName=odev27.11.dev
-Name=odev27.11
-Type=1
-Ver=2
-ObjFiles=
-Includes=
-Libs=
-PrivateResource=
-ResourceIncludes=
-MakeIncludes=
-Compiler=
-CppCompiler=
-Linker=
-IsCpp=0
-Icon=
-ExeOutput=
-ObjectOutput=
-LogOutput=
-LogOutputEnabled=0
-OverrideOutput=0
-OverrideOutputName=
-HostApplication=
-UseCustomMakefile=0
-CustomMakefile=
-CommandLine=
-Folders=
-IncludeVersionInfo=0
-SupportXPThemes=0
-CompilerSet=0
-CompilerSettings=0000000000000000000000000
-UnitCount=1
 
-[VersionInfo]
-Major=1
-Minor=0
-Release=0
-Build=0
-LanguageID=1033
-CharsetID=1252
-CompanyName=
-FileVersion=
-FileDescription=Developed using the Dev-C++ IDE
-InternalName=
-LegalCopyright=
-LegalTrademarks=
-OriginalFilename=
-ProductName=
-ProductVersion=
-AutoIncBuildNr=0
-SyncProduct=1
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h> 
+#include <ctype.h> // tolower() fonksiyonu icin
 
-[Unit1]
-FileName=odev27.11.c
-CompileCpp=0
-Folder=
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
+// --- GLOBAL DEĞİŞKENLER (Karakter Durumu) ---
+int saglik = 100;
+int enerji = 100;
+int yemek_sayisi = 5;
+int silah_var = 0; // 0: Yok, 1: Var
+int harita_konumu = 1;
+
+// --- FONKSİYON PROTOTİPLERİ ---
+void durumu_goster();
+void avlan();
+void tehlike_dalgasi();
+void sifreli_ilerleme();
+void durumu_kontrol_et();
+
+// --- ANA PROGRAM ---
+int main() {
+    // Rastgele sayi ureticiyi baslat
+    srand(time(NULL));
+
+    char komut;
+
+    printf("### KARAKTER TABANLI HAYATTA KALMA SİMÜLATÖRÜ ###\n");
+    printf("Komutlar: (A)vlan, (V)akit Gecir, (S)aklan, (R)est, (E)nvanter, (F)Tehlike, (P)Sifre, (X)Cikis\n");
+
+    // DO-WHILE DÖNGÜSÜ: Ana Oyun Döngüsü
+    do {
+        durumu_goster();
+
+        printf("\nKomut Girin (A, V, S, R, E, F, P, X): ");
+        // Lütfen dikkat: Scanf'ten önce gelen bosluk, karakter okuma hatalarını onler.
+        if (scanf(" %c", &komut) != 1) { 
+            // Giriş hatası olursa döngüden çık
+            break; 
+        }
+        
+        // Komutu kucuk harfe cevir (Hem buyuk hem kucuk harf kabul etmek icin)
+        komut = tolower(komut);
+
+        // SWITCH-CASE KOMUT SİSTEMİ
+        switch (komut) {
+            case 'a': // Avlanma
+                avlan();
+                break;
+            case 'v': // Vakit Geçirme (Enerji/Sağlık ihtimali)
+                printf("Vakit geciriliyor...\n");
+                // IF-ELSE Degerlendirmesi
+                if (rand() % 10 < 3) { // %30 sans
+                    enerji += 5;
+                    printf("Biraz dinlendiniz, enerji kazandiniz (+5).\n");
+                } else {
+                    enerji -= 2; // Aritmetik Operatörler
+                    printf("Beklemek yorucu, enerji kaybettiniz (-2).\n");
+                }
+                break;
+            case 's': // Saklanma (&& ve || Operatörleri Zorunluluğu)
+                printf("Saklaniliyor...\n");
+                // Silah varsa VEYA (||) harita konumu guvenliyse VE (&&) enerji tamamsa
+                if (silah_var == 1 || (harita_konumu < 3 && enerji > 90)) {
+                    printf("Guvenli bir yer buldunuz. Enerji artiyor (+3).\n");
+                    enerji += 3;
+                } else {
+                    printf("Saklanacak yer bulamadin. Dikkat cekiyorsun!\n");
+                    saglik -= 5; // Aritmetik Operatörler
+                }
+                break;
+            case 'r': // Dinlenme (Aritmetik Operatörler)
+                printf("Dinleniliyor...\n");
+                // Aritmetik İslemler
+                saglik += 10;
+                enerji += 15;
+                printf("Iyi bir dinlenme. Saglik (+10), Enerji (+15).\n");
+                break;
+            case 'e': // Envanter Görüntüle
+                printf("\n--- ENVANTER ---\n");
+                printf("Yemek Sayisi: %d\n", yemek_sayisi);
+                printf("Silah Durumu: %s\n", (silah_var ? "VAR" : "YOK"));
+                break;
+            case 'f': // Tehlike Dalgası (FOR Döngüsü Zorunluluğu)
+                tehlike_dalgasi();
+                break;
+            case 'p': // Şifreli İlerleme (DO-WHILE Döngüsü Engel Zorunluluğu)
+                sifreli_ilerleme();
+                break;
+            case 'x': // Çıkış
+                printf("Simulasyon sonlandiriliyor. Hosça kal!\n");
+                break;
+            default:
+                printf("Gecersiz komut. Tekrar deneyin.\n");
+                break;
+        }
+
+        durumu_kontrol_et(); // Her komut sonrası sağlık/enerji kontrolü
+
+    } while (komut != 'x' && saglik > 0 && enerji > 0);
+
+    if (saglik <= 0 || enerji <= 0) {
+        printf("\n!!! GAME OVER: Saglik veya enerji tukendi. !!!\n");
+    }
+
+    return 0;
+}
+
+// --- FONKSİYONLAR ---
+
+void durumu_goster() {
+    printf("\n--- GUNCEL DURUM ---\n");
+    printf("Saglik: %d/100 | Enerji: %d/100 | Yemek: %d | Konum: %d\n", saglik, enerji, yemek_sayisi, harita_konumu);
+}
+
+void avlan() {
+    printf("Avlanma girisimi...\n");
+    enerji -= 5; // Avlanmak enerji harcar (-5 Enerji: Aritmetik)
+
+    // IF Değerlendirmesi: Yemek kazanma ihtimali
+    if (rand() % 100 < 60) { // %60 sans
+        int kazanilan_yemek = rand() % 3 + 1; // 1 ile 3 arasi yemek
+        yemek_sayisi += kazanilan_yemek;
+        printf("Basarili av! %d adet yemek kazandiniz.\n", kazanilan_yemek);
+    } else {
+        printf("Basarisiz av. Yemek bulamadin.\n");
+    }
+}
+
+void tehlike_dalgasi() {
+    printf("!!! TEHLİKE DALGASI BAŞLADI !!!\n");
+    int hasar_katsayisi = 3;
+    int kacinma_sans;
+    
+    // Hata Çözümü: Değişkeni döngüden önce tanımlıyoruz
+    int i; 
+
+    // FOR DÖNGÜSÜ: Simüle edilen 5 tehlike adımı
+    for (i = 1; i <= 5; i++) {
+        kacinma_sans = rand() % 100;
+        printf("--- Adim %d ---\n", i);
+        
+        if (kacinma_sans < 70) { // %70 sansla kac
+            printf("Tehlikeden kacildi.\n");
+            enerji -= 1;
+        } else {
+            // Kacilamadi: Saglik ve Enerji kaybi
+            saglik -= hasar_katsayisi * i; // Her adimda hasar artıyor (Aritmetik)
+            enerji -= 3;
+            printf("Yaralandin! Saglik (-%d), Enerji (-3).\n", hasar_katsayisi * i);
+
+            // Oyuncuyu kurtarmak icin yemek kullanma sansi (IF-ELSE)
+            if (yemek_sayisi > 0 && saglik < 30) {
+                printf("Kritik durum! Otomatik olarak bir yemek kullandiniz. Saglik (+10).\n");
+                saglik += 10;
+                yemek_sayisi -= 1;
+            }
+        }
+        
+        if (saglik <= 0 || enerji <= 0) {
+            printf("Kritik durum, dalga sonlandiriliyor.\n");
+            break; // Karakter oluyorsa donguyu kir (break zorunlulugu)
+        }
+    }
+    printf("Tehlike dalgasi sona erdi.\n");
+}
+
+void sifreli_ilerleme() {
+    char sifre_giris;
+    char dogru_sifre = '4'; 
+
+    printf("Onunde bir engel var. Sifreyi cozmelisin. (Sifre: 4)\n");
+    
+    // DO-WHILE DÖNGÜSÜ: Engel aşılana kadar döner
+    do {
+        printf("Sifreyi girin (Tek Karakter): ");
+        scanf(" %c", &sifre_giris);
+        sifre_giris = tolower(sifre_giris);
+        
+        // IF-ELSE: Girilen sifrenin dogrulugu
+        if (sifre_giris != dogru_sifre) {
+            printf("Yanlis sifre! Tekrar dene. Enerji kaybi (-3).\n");
+            enerji -= 3; // Aritmetik Operatörler
+        }
+        
+        if (enerji <= 0 || saglik <= 0) {
+            printf("Cok yoruldun, ilerleme durduruldu.\n");
+            break;
+        }
+
+    } while (sifre_giris != dogru_sifre);
+
+    if (sifre_giris == dogru_sifre) {
+        printf("!!! BASARILI !!! Sifre dogru! Yeni bolgeye ilerledin.\n");
+        harita_konumu++;
+    }
+}
+
+void durumu_kontrol_et() {
+    // Sınır Kontrolleri: Degerlerin 0-100 araliginda kalmasini saglar (IF-ELSE)
+    if (saglik > 100) saglik = 100;
+    if (enerji > 100) enerji = 100;
+    if (saglik < 0) saglik = 0;
+    if (enerji < 0) enerji = 0;
+    if (yemek_sayisi < 0) yemek_sayisi = 0;
+}
 
